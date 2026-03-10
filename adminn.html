@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>Admin Panel — UPIOffers.in</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
+
+<!-- Firebase SDKs (CDN - no module needed) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0D0F14;--sb:#13161E;--card:#1A1D27;--card2:#20243A;--bdr:#2A2D3E;--or:#FF6B35;--or2:#E8521A;--gr:#00C97B;--re:#FF4757;--bl:#3D8EFF;--pu:#A855F7;--ye:#FFD700;--tx:#E8EAF0;--mt:#6B7280}
+html{height:100%}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex}
+/* LOGIN */
+#login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;background-image:radial-gradient(circle at 20% 50%,rgba(255,107,53,.07) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(61,142,255,.07) 0%,transparent 50%)}
+.lbox{background:var(--card);border:1px solid var(--bdr);border-radius:22px;padding:40px;width:100%;max-width:400px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.llogo{font-family:'Baloo 2',cursive;font-size:1.7rem;font-weight:800;color:var(--or);text-align:center;margin-bottom:4px}
+.lsub{text-align:center;color:var(--mt);font-size:.82rem;margin-bottom:28px}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:.75rem;font-weight:800;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+.fg input{width:100%;background:#0D0F14;border:2px solid var(--bdr);color:var(--tx);font-family:'Nunito',sans-serif;font-size:.92rem;padding:11px 14px;border-radius:11px;outline:none;transition:.2s}
+.fg input:focus{border-color:var(--or)}
+.lbtn{width:100%;background:linear-gradient(135deg,var(--or),var(--or2));color:#fff;font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:800;padding:13px;border-radius:11px;cursor:pointer;transition:.2s;margin-top:6px;border:none}
+.lbtn:hover{opacity:.9}.lbtn:active{transform:scale(.98)}
+.lbtn:disabled{opacity:.6;cursor:not-allowed}
+.lerr{color:var(--re);font-size:.8rem;text-align:center;margin-top:12px;padding:10px;background:rgba(255,71,87,.08);border-radius:8px;display:none}
+.linfo{color:var(--mt);font-size:.75rem;text-align:center;margin-top:12px;line-height:1.6}
+.linfo strong{color:var(--tx)}
+/* SIDEBAR */
+.sidebar{width:230px;min-height:100vh;background:var(--sb);border-right:1px solid var(--bdr);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;transition:transform .3s}
+.slogo{padding:22px 18px 18px;border-bottom:1px solid var(--bdr);font-family:'Baloo 2',cursive;font-size:1.3rem;font-weight:800;color:var(--or)}
+.user-bar{margin:12px;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.15);border-radius:10px;padding:10px 12px}
+.user-email{font-size:.72rem;color:var(--or);font-weight:700;word-break:break-all}
+.user-label{font-size:.65rem;color:var(--mt);margin-bottom:3px}
+.snav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:3px}
+.nsec{font-size:.65rem;font-weight:800;color:var(--mt);text-transform:uppercase;letter-spacing:1px;padding:10px 8px 5px}
+.ni{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:11px;cursor:pointer;font-weight:700;font-size:.85rem;color:var(--mt);transition:.2s;border:1.5px solid transparent}
+.ni:hover{background:var(--card);color:var(--tx)}.ni.on{background:rgba(255,107,53,.12);color:var(--or);border-color:rgba(255,107,53,.2)}
+.ni .ico{font-size:1rem;width:20px;text-align:center}
+.sfooter{padding:14px 18px;border-top:1px solid var(--bdr)}
+.lgout{width:100%;background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.2);color:var(--re);font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;padding:9px;border-radius:10px;cursor:pointer;transition:.2s}
+.lgout:hover{background:rgba(255,71,87,.2)}
+/* MAIN */
+.main{margin-left:230px;flex:1;padding:24px;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.ptitle{font-family:'Baloo 2',cursive;font-size:1.5rem;font-weight:800}.ptitle span{color:var(--or)}
+.tbr{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.addbtn{background:linear-gradient(135deg,var(--or),var(--or2));color:#fff;border:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;padding:9px 18px;border-radius:11px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.2s}
+.addbtn:hover{transform:translateY(-1px)}
+.sbar{background:var(--card);border:1px solid var(--bdr);color:var(--tx);font-family:'Nunito',sans-serif;font-size:.85rem;padding:9px 14px;border-radius:11px;outline:none;width:200px;transition:.2s}
+.sbar:focus{border-color:var(--or)}
+/* STATS */
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.sc{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:18px 20px;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;opacity:.12}
+.sc.s1::before{background:var(--or)}.sc.s2::before{background:var(--gr)}.sc.s3::before{background:var(--re)}.sc.s4::before{background:var(--pu)}
+.slabel{font-size:.7rem;font-weight:800;color:var(--mt);text-transform:uppercase;letter-spacing:.5px}
+.sval{font-family:'Baloo 2',cursive;font-size:1.9rem;font-weight:800;margin:3px 0}
+.sc.s1 .sval{color:var(--or)}.sc.s2 .sval{color:var(--gr)}.sc.s3 .sval{color:var(--re)}.sc.s4 .sval{color:var(--pu)}
+.schg{font-size:.7rem;color:var(--gr);font-weight:700}
+/* TABS */
+.tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:6px;margin-bottom:20px;width:fit-content}
+.tab{font-size:.82rem;font-weight:700;padding:8px 18px;border-radius:10px;cursor:pointer;color:var(--mt);transition:.2s;border:none;font-family:'Nunito',sans-serif;background:none}
+.tab:hover{color:var(--tx)}.tab.on{background:var(--or);color:#fff}
+/* FILTER */
+.fbar{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:12px 16px;margin-bottom:18px;flex-wrap:wrap}
+.flabel{font-size:.72rem;color:var(--mt);font-weight:800}
+.fbtn{background:transparent;border:1px solid var(--bdr);color:var(--mt);font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:700;padding:5px 14px;border-radius:30px;cursor:pointer;transition:.2s}
+.fbtn:hover,.fbtn.on{background:var(--or);border-color:var(--or);color:#fff}
+/* TABLE */
+.twrap{background:var(--card);border:1px solid var(--bdr);border-radius:18px;overflow:hidden}
+.thead2{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--bdr)}
+.thead2 h3{font-family:'Baloo 2',cursive;font-size:1.05rem;font-weight:700}
+.cbadge{background:rgba(255,107,53,.12);color:var(--or);font-size:.72rem;font-weight:800;padding:3px 11px;border-radius:20px}
+table{width:100%;border-collapse:collapse}
+thead tr{background:rgba(255,255,255,.02);border-bottom:1px solid var(--bdr)}
+thead th{padding:11px 18px;text-align:left;font-size:.68rem;font-weight:800;color:var(--mt);text-transform:uppercase;letter-spacing:.5px}
+tbody tr{border-bottom:1px solid var(--bdr);transition:.15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+tbody td{padding:13px 18px;font-size:.85rem;vertical-align:middle}
+.apill{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.75rem;padding:3px 11px;border-radius:30px}
+.pg{background:rgba(66,133,244,.12);color:#4285F4}.pp{background:rgba(107,44,213,.12);color:#9B59B6}
+.pt{background:rgba(0,186,242,.12);color:#00BAF2}.pb2{background:rgba(255,107,53,.12);color:var(--or)}
+.pa{background:rgba(255,153,0,.12);color:var(--or2)}.pc3{background:rgba(168,85,247,.12);color:var(--pu)}
+.cash{font-family:'Baloo 2',cursive;font-size:.98rem;font-weight:700;color:var(--gr)}
+.pmono{font-family:'JetBrains Mono',monospace;font-size:.76rem;font-weight:600;background:rgba(255,107,53,.08);color:var(--or);padding:3px 9px;border-radius:6px}
+.sbadge{display:inline-block;font-size:.68rem;font-weight:800;padding:3px 11px;border-radius:20px}
+.sa{background:rgba(0,201,123,.12);color:var(--gr)}.sx{background:rgba(255,71,87,.12);color:var(--re)}.sd{background:rgba(107,114,128,.12);color:var(--mt)}
+.acts{display:flex;gap:6px}
+.ab{width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:.15s}
+.ae{background:rgba(61,142,255,.12);color:var(--bl)}.ae:hover{background:rgba(61,142,255,.25)}
+.ad2{background:rgba(255,71,87,.12);color:var(--re)}.ad2:hover{background:rgba(255,71,87,.25)}
+.at{background:rgba(0,201,123,.12);color:var(--gr)}.at:hover{background:rgba(0,201,123,.25)}
+.ctable{display:none}.ctable.show{display:block}
+.otable{display:none}.otable.show{display:block}
+.del-cmt{background:rgba(255,71,87,.12);color:var(--re);border:none;font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:7px;cursor:pointer;font-family:'Nunito',sans-serif}
+.live-badge{background:rgba(0,201,123,.12);color:var(--gr);font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:20px;margin-left:6px}
+/* MODAL */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.moverlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--bdr);border-radius:22px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.6)}
+.modal::-webkit-scrollbar{width:4px}.modal::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:4px}
+.mhdr{padding:22px 26px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--card);z-index:1}
+.mtitle{font-family:'Baloo 2',cursive;font-size:1.25rem;font-weight:800}
+.mclose{width:34px;height:34px;background:var(--card2);border:1px solid var(--bdr);border-radius:9px;color:var(--mt);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.mclose:hover{color:var(--re);border-color:var(--re)}
+.mbody{padding:22px 26px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mfull{grid-column:1/-1}
+.mfg{display:flex;flex-direction:column;gap:7px}
+.mfg label{font-size:.72rem;font-weight:800;color:var(--mt);text-transform:uppercase;letter-spacing:.5px}
+.mfg input,.mfg select,.mfg textarea{background:var(--bg);border:2px solid var(--bdr);color:var(--tx);font-family:'Nunito',sans-serif;font-size:.88rem;padding:10px 13px;border-radius:11px;outline:none;transition:.2s;resize:none}
+.mfg input:focus,.mfg select:focus,.mfg textarea:focus{border-color:var(--or)}
+.mfg select option{background:var(--card)}
+.mfoot{padding:14px 26px 22px;display:flex;gap:10px;justify-content:flex-end}
+.bcncl{background:transparent;border:1px solid var(--bdr);color:var(--mt);font-family:'Nunito',sans-serif;font-weight:700;font-size:.85rem;padding:9px 20px;border-radius:11px;cursor:pointer;transition:.2s}
+.bcncl:hover{border-color:var(--tx);color:var(--tx)}
+.bsave{background:linear-gradient(135deg,var(--or),var(--or2));color:#fff;border:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;padding:9px 26px;border-radius:11px;cursor:pointer;transition:.2s}
+.dbox{max-width:380px;text-align:center;padding:36px 28px}
+.dico{font-size:3.2rem;margin-bottom:14px}
+.dtitle{font-family:'Baloo 2',cursive;font-size:1.3rem;font-weight:800;color:var(--re);margin-bottom:7px}
+.dsub{color:var(--mt);font-size:.85rem;line-height:1.6;margin-bottom:24px}
+.dacts{display:flex;gap:10px;justify-content:center}
+.bdel{background:var(--re);color:#fff;border:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;padding:9px 24px;border-radius:11px;cursor:pointer}
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--bdr);color:var(--tx);font-weight:700;font-size:.82rem;padding:12px 20px;border-radius:13px;box-shadow:0 8px 28px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:.3s;z-index:9999;display:flex;align-items:center;gap:9px}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.ok .td{background:var(--gr)}.td{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+#toast.err .td{background:var(--re)}
+.erow td,.loading-row td{text-align:center;padding:36px;color:var(--mt);font-size:.88rem}
+@media(max-width:900px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.sgrid{grid-template-columns:1fr 1fr}.mbtn{display:flex!important}}
+@media(max-width:600px){.sgrid{grid-template-columns:1fr 1fr}.sbar{width:130px}.mgrid{grid-template-columns:1fr}.main{padding:14px}}
+.mbtn{display:none;width:34px;height:34px;background:var(--card);border:1px solid var(--bdr);border-radius:9px;align-items:center;justify-content:center;cursor:pointer;font-size:1rem}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lbox">
+    <div class="llogo">💰 UPIOffers</div>
+    <div class="lsub">Admin Panel — Firebase Login</div>
+    <div class="fg">
+      <label>Email</label>
+      <input type="email" id="un" placeholder="admin@email.com" autocomplete="email"/>
+    </div>
+    <div class="fg">
+      <label>Password</label>
+      <input type="password" id="up" placeholder="••••••••"/>
+    </div>
+    <button class="lbtn" id="lbtn" onclick="doLogin()">🔓 Login Karo</button>
+    <div class="lerr" id="lerr"></div>
+    <div class="linfo">Firebase Authentication se login hoga.<br/><strong>Wahi email/password use karo jo Firebase mein banaya tha.</strong></div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sb">
+  <div class="slogo">💰 UPIAdmin</div>
+  <div class="user-bar">
+    <div class="user-label">Logged in:</div>
+    <div class="user-email" id="user-email">—</div>
+  </div>
+  <nav class="snav">
+    <div class="nsec">Main</div>
+    <div class="ni on" onclick="goTab('offers',this)"><span class="ico">🎁</span> Offers</div>
+    <div class="ni" onclick="goTab('comments',this)"><span class="ico">💬</span> Live Comments <span id="sb-ccount" style="background:var(--or);color:#fff;font-size:.6rem;padding:1px 6px;border-radius:10px;margin-left:auto;display:none"></span></div>
+    <div class="nsec">App Filter</div>
+    <div class="ni" onclick="fApp('GPay',this)"><span class="ico">💳</span> GPay</div>
+    <div class="ni" onclick="fApp('PhonePe',this)"><span class="ico">📱</span> PhonePe</div>
+    <div class="ni" onclick="fApp('Paytm',this)"><span class="ico">💙</span> Paytm</div>
+    <div class="ni" onclick="fApp('BHIM',this)"><span class="ico">🇮🇳</span> BHIM</div>
+  </nav>
+  <div class="sfooter"><button class="lgout" onclick="doLogout()">🚪 Logout</button></div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="mbtn" id="mbtn" onclick="toggleSb()">☰</div>
+      <div class="ptitle">Admin <span id="ptxt">Offers</span></div>
+    </div>
+    <div class="tbr">
+      <input class="sbar" type="text" placeholder="🔍 Search..." id="srch" oninput="renderActive()"/>
+      <button class="addbtn" id="addbtn" onclick="openAdd()">＋ Naya Offer</button>
+    </div>
+  </div>
+  <div class="sgrid">
+    <div class="sc s1"><div class="slabel">Total Offers</div><div class="sval" id="st-tot">0</div><div class="schg">Sab offers</div></div>
+    <div class="sc s2"><div class="slabel">Active</div><div class="sval" id="st-act">0</div><div class="schg">✅ Live</div></div>
+    <div class="sc s3"><div class="slabel">Expired</div><div class="sval" id="st-exp">0</div><div class="schg">⏰ Khatam</div></div>
+    <div class="sc s4"><div class="slabel">Comments</div><div class="sval" id="st-cmt">—</div><div class="schg">💬 Firebase</div></div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="tab-offers" onclick="switchTab('offers')">🎁 Offers</button>
+    <button class="tab" id="tab-comments" onclick="switchTab('comments')">💬 Comments <span class="live-badge">LIVE</span></button>
+  </div>
+  <div class="otable show" id="sec-offers">
+    <div class="fbar">
+      <span class="flabel">Filter:</span>
+      <button class="fbtn on" onclick="fSt('all',this)">Sab</button>
+      <button class="fbtn" onclick="fSt('active',this)">✅ Active</button>
+      <button class="fbtn" onclick="fSt('expired',this)">⏰ Expired</button>
+      <button class="fbtn" onclick="fSt('draft',this)">📝 Draft</button>
+    </div>
+    <div class="twrap">
+      <div class="thead2"><h3>🎁 Saare Offers</h3><span class="cbadge" id="ocnt">0</span></div>
+      <table><thead><tr><th>#</th><th>App</th><th>Offer</th><th>Code</th><th>Cashback</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="otbody"></tbody></table>
+    </div>
+  </div>
+  <div class="ctable" id="sec-comments">
+    <div class="twrap">
+      <div class="thead2"><h3>💬 Live Comments <span class="live-badge">🔴 REALTIME</span></h3><span class="cbadge" id="ccnt">0</span></div>
+      <table><thead><tr><th>#</th><th>User</th><th>Comment</th><th>Offer</th><th>Time</th><th>Del</th></tr></thead>
+      <tbody id="ctbody"><tr class="loading-row"><td colspan="6">⏳ Load ho raha hai...</td></tr></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="moverlay" id="omodal">
+  <div class="modal">
+    <div class="mhdr"><div class="mtitle" id="mtitle">✨ Naya Offer</div><button class="mclose" onclick="closeModal()">✕</button></div>
+    <div class="mbody">
+      <div class="mgrid">
+        <div class="mfg"><label>App</label>
+          <select id="f-app"><option value="GPay">💳 Google Pay</option><option value="PhonePe">📱 PhonePe</option><option value="Paytm">💙 Paytm</option><option value="BHIM">🇮🇳 BHIM UPI</option><option value="Amazon Pay">🛒 Amazon Pay</option><option value="CRED">💎 CRED Pay</option></select></div>
+        <div class="mfg"><label>Status</label>
+          <select id="f-status"><option value="active">✅ Active</option><option value="expired">⏰ Expired</option><option value="draft">📝 Draft</option></select></div>
+        <div class="mfg mfull"><label>Offer Title</label><input type="text" id="f-title" placeholder="Jaise: Bill Payment pe ₹50 Cashback"/></div>
+        <div class="mfg"><label>Promo Code</label><input type="text" id="f-code" placeholder="GPAY50"/></div>
+        <div class="mfg"><label>Cashback</label><input type="text" id="f-cashback" placeholder="₹50 ya 10%"/></div>
+        <div class="mfg"><label>Sub Text</label><input type="text" id="f-sub" placeholder="Electricity/Gas/Water"/></div>
+        <div class="mfg"><label>Min Transaction</label><input type="text" id="f-min" placeholder="₹100"/></div>
+        <div class="mfg"><label>Expiry Date</label><input type="date" id="f-expiry"/></div>
+        <div class="mfg"><label>Badge 1</label>
+          <select id="f-b1"><option value="">— Koi nahi —</option><option value="hot">🔥 Hot</option><option value="new">✨ New</option><option value="bt2">⭐ Top Pick</option><option value="ends">⏰ Aaj Khatam</option></select></div>
+        <div class="mfg"><label>Badge 2</label>
+          <select id="f-b2"><option value="">— Koi nahi —</option><option value="hot">🔥 Hot</option><option value="new">✨ New</option><option value="bu">🆕 New User</option><option value="bt2">⭐ Top Pick</option></select></div>
+        <div class="mfg 
